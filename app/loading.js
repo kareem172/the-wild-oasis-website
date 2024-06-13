@@ -1,9 +1,7 @@
+import Spinner from "./_components/Spinner";
+
 function loading() {
-    return (
-        <div className="text-3xl">
-            Loading page ...
-        </div>
-    )
+  return <Spinner />;
 }
 
-export default loading
+export default loading;

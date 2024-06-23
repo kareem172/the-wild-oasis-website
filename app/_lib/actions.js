@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { auth, signIn, signOut } from "./auth";
 import { supabase } from "./supabase";
 import { getBooking } from "./data-service";
+import { redirect } from "next/navigation";
 export async function updateGuest(formData) {
   const session = await auth();
   if (!session) throw new Error("Unauthorized");
@@ -68,7 +69,8 @@ export async function updateReservation(formData) {
 
   if (error) throw new Error("Reservation could not be updated");
 
-  revalidatePath(`/account/reservations/edit/${reservationId}`);
+  revalidatePath(`/account/reservations`);
+  redirect(`/account/reservations`);
 }
 export async function signInAction() {
   await signIn("google", { redirectTo: "/account" });

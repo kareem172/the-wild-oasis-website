@@ -44,6 +44,32 @@ export async function deleteReservation(bookingId) {
 
   revalidatePath("/account/reservations");
 }
+export async function updateReservation(formData) {
+  const session = await auth();
+  if (!session) throw new Error("Unauthorized to update reservation");
+
+  const reservationId = formData.get("reservationId");
+  const numGuests = parseInt(formData.get("numGuests"), 10);
+  const observations = formData.get("observations");
+
+  const reservation = await getBooking(reservationId);
+  if (reservation.guestId !== session.user.guestId)
+    throw new Error("Unauthorized to update this reservation");
+
+  const updatedData = {
+    numGuests,
+    observations,
+  };
+
+  const { data, error } = await supabase
+    .from("bookings")
+    .update(updatedData)
+    .eq("id", reservationId);
+
+  if (error) throw new Error("Reservation could not be updated");
+
+  revalidatePath(`/account/reservations/edit/${reservationId}`);
+}
 export async function signInAction() {
   await signIn("google", { redirectTo: "/account" });
 }

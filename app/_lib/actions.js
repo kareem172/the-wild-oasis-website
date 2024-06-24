@@ -4,6 +4,7 @@ import { auth, signIn, signOut } from "./auth";
 import { supabase } from "./supabase";
 import { getBooking } from "./data-service";
 import { redirect } from "next/navigation";
+
 export async function updateGuest(formData) {
   const session = await auth();
   if (!session) throw new Error("Unauthorized");
@@ -45,6 +46,7 @@ export async function deleteReservation(bookingId) {
 
   revalidatePath("/account/reservations");
 }
+
 export async function updateReservation(formData) {
   const session = await auth();
   if (!session) throw new Error("Unauthorized to update reservation");
@@ -73,6 +75,35 @@ export async function updateReservation(formData) {
   revalidatePath(`/account/reservations/edit/${reservationId}`);
   redirect(`/account/reservations`);
 }
+
+export async function createReservation(reservationData, formData) {
+  const session = await auth();
+  if (!session) throw new Error("Unauthorized to create reservation");
+
+  const numGuests = parseInt(formData.get("numGuests"), 10);
+  const observations = formData.get("observations");
+
+  const newReservation = {};
+  const { data, error } = await supabase.from("bookings").insert([
+    {
+      ...reservationData,
+      numGuests,
+      observations,
+      guestId: session.user.guestId,
+      extrasPrice: 0,
+      totalPrice: reservationData.cabinPrice + 0,
+      status: "unconfirmed",
+      isPaid: false,
+      hasBreakfast: false,
+    },
+  ]);
+
+  if (error) throw new Error("Reservation could not be created");
+
+  revalidatePath(`/cabins/${reservationData.cabinId}`);
+  redirect(`/cabins/thankyou`);
+}
+
 export async function signInAction() {
   await signIn("google", { redirectTo: "/account" });
 }
